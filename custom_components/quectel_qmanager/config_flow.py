@@ -7,6 +7,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -46,10 +47,17 @@ class QManagerConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_HOST])
             self._abort_if_unique_id_configured()
 
-            # A dedicated session (not the shared HA one) so this
-            # validation attempt's cookies don't linger anywhere -
-            # discarded after this flow either way.
-            session = async_create_clientsession(self.hass, verify_ssl=False)
+            # A dedicated session (not the shared HA one), same
+            # cookie_jar=unsafe=True reasoning as __init__.py (aiohttp
+            # drops cookies for bare-IP hosts otherwise). Do NOT close
+            # this manually - sessions created via async_create_clientsession
+            # are tracked and cleaned up by Home Assistant itself; calling
+            # session.close() here trips a HA-level warning (confirmed
+            # against real hardware) and fights its own lifecycle
+            # management instead of using it.
+            session = async_create_clientsession(
+                self.hass, verify_ssl=False, cookie_jar=aiohttp.CookieJar(unsafe=True)
+            )
             client = QManagerClient(
                 session, user_input[CONF_HOST], user_input[CONF_PASSWORD]
             )
@@ -67,8 +75,6 @@ class QManagerConfigFlow(ConfigFlow, domain=DOMAIN):
                     title=f"Quectel Modem ({user_input[CONF_HOST]})",
                     data=user_input,
                 )
-            finally:
-                await session.close()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors

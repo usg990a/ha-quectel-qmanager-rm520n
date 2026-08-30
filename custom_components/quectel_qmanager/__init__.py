@@ -4,6 +4,8 @@ UNTESTED against real hardware - see README.
 """
 from __future__ import annotations
 
+import aiohttp
+
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
@@ -31,7 +33,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: QManagerConfigEntry) -> 
     # integration has explicit control over its own cookie jar/lifecycle
     # - QManager's session auth needs that state managed deliberately,
     # unlike the sibling integration's stateless Basic Auth.
-    session = async_create_clientsession(hass, verify_ssl=False)
+    #
+    # cookie_jar=CookieJar(unsafe=True): aiohttp's default cookie jar
+    # silently refuses to store cookies for bare-IP hosts (its domain
+    # validation doesn't recognize an IP as a valid cookie domain) - so
+    # without this, login() appears to succeed (real "success": true
+    # response, no exception) but the qm_session cookie is dropped and
+    # never actually sent on the next request. This matches a real
+    # failure seen against actual hardware ("Authentication failed:
+    # Still unauthorized after re-login", right after a plain curl
+    # login/cookie test - which has no such IP restriction - worked
+    # fine) - diagnosed from the symptom, not yet re-confirmed that this
+    # specific fix resolves it end-to-end.
+    session = async_create_clientsession(
+        hass, verify_ssl=False, cookie_jar=aiohttp.CookieJar(unsafe=True)
+    )
     client = QManagerClient(session, entry.data[CONF_HOST], entry.data[CONF_PASSWORD])
 
     main_coordinator = QManagerCoordinator(
