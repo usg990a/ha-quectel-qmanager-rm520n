@@ -1,0 +1,72 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Connect to Quectel QManager",
+        "description": "Enter the modem's QManager address and password (the same password used to log into the QManager web UI). QManager's setup wizard must already have been completed.",
+        "data": {
+          "host": "Host",
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to the modem. Check the host address and that QManager is running.",
+      "invalid_auth": "Invalid password.",
+      "unknown": "Unexpected error."
+    },
+    "abort": {
+      "already_configured": "This modem is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "network_type": { "name": "Network Type" },
+      "carrier": { "name": "Carrier" },
+      "service_status": { "name": "Service Status" },
+      "apn": { "name": "APN" },
+      "wan_ipv4": { "name": "WAN IPv4" },
+      "wan_ipv6": { "name": "WAN IPv6" },
+      "carrier_aggregation": { "name": "Carrier Aggregation" },
+      "lte_band": { "name": "LTE Band" },
+      "lte_rsrp": { "name": "LTE RSRP" },
+      "lte_rsrq": { "name": "LTE RSRQ" },
+      "lte_sinr": { "name": "LTE SINR" },
+      "lte_cell_id": { "name": "LTE Cell ID" },
+      "lte_pci": { "name": "LTE PCI" },
+      "lte_tac": { "name": "LTE TAC" },
+      "nr_band": { "name": "NR Band" },
+      "nr_rsrp": { "name": "NR RSRP" },
+      "nr_rsrq": { "name": "NR RSRQ" },
+      "nr_sinr": { "name": "NR SINR" },
+      "nr_pci": { "name": "NR PCI" },
+      "modem_temperature": { "name": "Temperature" },
+      "cpu_usage": { "name": "CPU Usage" },
+      "memory_used": { "name": "Memory Used" },
+      "last_restart": { "name": "Last Restart" },
+      "manufacturer": { "name": "Manufacturer" },
+      "model": { "name": "Model" },
+      "firmware_version": { "name": "Firmware Version" },
+      "imei": { "name": "IMEI" },
+      "imsi": { "name": "IMSI" },
+      "iccid": { "name": "ICCID" },
+      "phone_number": { "name": "Phone Number" },
+      "latency": { "name": "Latency" },
+      "packet_loss": { "name": "Packet Loss" },
+      "data_rx_rate": { "name": "Download Rate" },
+      "data_tx_rate": { "name": "Upload Rate" },
+      "data_received": { "name": "Data Received" },
+      "data_sent": { "name": "Data Sent" }
+    },
+    "button": {
+      "reboot": { "name": "Reboot" },
+      "cycle_radio": { "name": "Cycle Radio" }
+    },
+    "binary_sensor": {
+      "internet_connected": { "name": "Internet Connection" }
+    },
+    "device_tracker": {
+      "gps": { "name": "GPS Location" }
+    }
+  }
+}

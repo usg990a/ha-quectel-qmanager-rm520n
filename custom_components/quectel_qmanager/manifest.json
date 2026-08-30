@@ -1,0 +1,12 @@
+{
+  "domain": "quectel_qmanager",
+  "name": "Quectel QManager (RM520N-GL)",
+  "codeowners": ["@usg990a"],
+  "config_flow": true,
+  "documentation": "https://github.com/usg990a/ha-quectel-qmanager-rm520n",
+  "integration_type": "device",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/usg990a/ha-quectel-qmanager-rm520n/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}
