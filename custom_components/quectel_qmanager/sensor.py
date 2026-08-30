@@ -22,7 +22,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     EntityCategory,
-    UnitOfDataRate,
     UnitOfInformation,
     UnitOfTemperature,
 )
@@ -68,8 +67,14 @@ def _connectivity(c: QManagerCoordinator) -> dict:
     return safe_get(c.data, "connectivity", default={})
 
 
-def _traffic(c: QManagerCoordinator) -> dict:
-    return safe_get(c.data, "traffic", default={})
+def _data_used(c: QManagerCoordinator) -> dict:
+    # Confirmed against real output: the doc's "traffic" section (with
+    # rx_bytes_per_sec/total_rx_bytes etc.) doesn't exist. The real section
+    # is "data_used", with only cumulative counters
+    # (accumulated_rx_bytes/accumulated_tx_bytes) - no per-second rate
+    # field at all, so there's nothing to build a rate sensor from
+    # natively (would need our own delta-over-time tracking to derive one).
+    return safe_get(c.data, "data_used", default={})
 
 
 # --- value/attr extractors ----------------------------------------------
@@ -87,8 +92,12 @@ def _last_restart(c: QManagerCoordinator):
 
 
 def _carrier_aggregation_summary(c: QManagerCoordinator) -> str | None:
-    network = _network(c)
-    count = safe_int(network.get("ca_count"))
+    # Confirmed against real output: network.ca_count is LTE-specific (0 on
+    # an NR-CA-only device even while carrier_components lists 2 active
+    # component carriers) - counting carrier_components directly reflects
+    # reality regardless of which RAT's CA counter is nonzero.
+    components = _network(c).get("carrier_components") or []
+    count = len(components)
     if not count:
         return "Inactive"
     return f"{count} component carrier{'s' if count != 1 else ''}"
@@ -340,25 +349,10 @@ SENSOR_DESCRIPTIONS: tuple[QManagerSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda c: safe_float(_connectivity(c).get("packet_loss_pct")),
     ),
-    # Traffic
-    QManagerSensorEntityDescription(
-        key="data_rx_rate",
-        translation_key="data_rx_rate",
-        device_class=SensorDeviceClass.DATA_RATE,
-        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda c: safe_int(_traffic(c).get("rx_bytes_per_sec")),
-    ),
-    QManagerSensorEntityDescription(
-        key="data_tx_rate",
-        translation_key="data_tx_rate",
-        device_class=SensorDeviceClass.DATA_RATE,
-        native_unit_of_measurement=UnitOfDataRate.BYTES_PER_SECOND,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda c: safe_int(_traffic(c).get("tx_bytes_per_sec")),
-    ),
+    # Data usage - cumulative counters only (data_used.*); no per-second
+    # rate field exists natively, confirmed against real output, so there
+    # are no rate sensors here (a derived rate would need our own
+    # delta-over-time tracking - not implemented).
     QManagerSensorEntityDescription(
         key="data_received",
         translation_key="data_received",
@@ -366,7 +360,7 @@ SENSOR_DESCRIPTIONS: tuple[QManagerSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda c: safe_int(_traffic(c).get("total_rx_bytes")),
+        value_fn=lambda c: safe_int(_data_used(c).get("accumulated_rx_bytes")),
     ),
     QManagerSensorEntityDescription(
         key="data_sent",
@@ -375,7 +369,7 @@ SENSOR_DESCRIPTIONS: tuple[QManagerSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfInformation.BYTES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda c: safe_int(_traffic(c).get("total_tx_bytes")),
+        value_fn=lambda c: safe_int(_data_used(c).get("accumulated_tx_bytes")),
     ),
 )
 

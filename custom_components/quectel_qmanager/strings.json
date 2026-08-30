@@ -53,8 +53,6 @@
       "phone_number": { "name": "Phone Number" },
       "latency": { "name": "Latency" },
       "packet_loss": { "name": "Packet Loss" },
-      "data_rx_rate": { "name": "Download Rate" },
-      "data_tx_rate": { "name": "Upload Rate" },
       "data_received": { "name": "Data Received" },
       "data_sent": { "name": "Data Sent" }
     },
